@@ -73,8 +73,18 @@ where
         )
             .join()
         {
+
+            // User actually just replaced this collider
+            let replaced_collider = modified_physics_colliders.contains(id) && physics_collider.get_unchecked().handle.is_none();
+
+            // handle removed events
+            if replaced_collider || removed_physics_colliders.contains(id) {
+                debug!("Removed PhysicsCollider with id: {}", id);
+                remove_collider::<N, P>(id, &mut physics);
+            }
+
             // handle inserted events
-            if inserted_positions.contains(id) || inserted_physics_colliders.contains(id) {
+            if replaced_collider || inserted_positions.contains(id) || inserted_physics_colliders.contains(id) {
                 debug!("Inserted PhysicsCollider with id: {}", id);
                 add_collider::<N, P>(
                     id,
@@ -86,15 +96,9 @@ where
             }
 
             // handle modified events
-            if modified_physics_colliders.contains(id) {
+            if !replaced_collider && modified_physics_colliders.contains(id) {
                 debug!("Modified PhysicsCollider with id: {}", id);
                 update_collider::<N, P>(id, &mut physics, physics_collider.get_unchecked());
-            }
-
-            // handle removed events
-            if removed_physics_colliders.contains(id) {
-                debug!("Removed PhysicsCollider with id: {}", id);
-                remove_collider::<N, P>(id, &mut physics);
             }
         }
 
